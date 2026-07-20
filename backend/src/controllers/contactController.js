@@ -3,7 +3,7 @@
  *
  * Validates + sanitizes input, applies a simple in-memory rate limit, then
  * fires two Resend emails:
- *   1. Notification → admin@leedsphere.com (with reply-to = the sender)
+ *   1. Notification → hello@neonneuron.online (with reply-to = the sender)
  *   2. Auto-reply   → the sender
  *
  * Both emails are best-effort: if Resend is down we still return 200 so a

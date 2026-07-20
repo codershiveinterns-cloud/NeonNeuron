@@ -1,33 +1,32 @@
-import { useState } from 'react';
+import { createElement, useState } from 'react';
 import MarketingPage, { Section, Card } from '../../components/marketing/MarketingPage';
-import { Mail, MessageSquare, LifeBuoy, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Mail, MessageSquare, Send, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { API_ROOT } from '../../config/api';
 
-// Single source of truth for the support inbox. Any UI surface that needs to
-// surface a contact email reads from this constant so renaming is a one-line
-// change. Mirrors backend SUPPORT_EMAIL (services/email.js).
-export const SUPPORT_EMAIL = 'admin@neonneuron.online';
+// Single source of truth for the public enquiries inbox. Mirrors backend
+// SUPPORT_EMAIL (services/email.js).
+export const SUPPORT_EMAIL = 'hello@neonneuron.online';
 
 const CHANNELS = [
   {
     icon: Mail,
-    title: 'Email',
-    body: 'For sales, partnerships, or anything else that doesn’t fit elsewhere.',
-    cta: { label: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },
+    title: 'Project enquiries',
+    body: 'Tell us what you want to build, improve, or automate. We will help shape the next practical step.',
+    cta: { label: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}?subject=Project%20enquiry` },
   },
   {
-    icon: LifeBuoy,
-    title: 'Support',
-    body: 'Already using NeonNeuron and run into something? We typically reply within 24 hours.',
-    cta: { label: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}?subject=Support%20request` },
+    icon: Sparkles,
+    title: 'Consulting',
+    body: 'Need technical direction, delivery planning, or a second opinion on a digital system?',
+    cta: { label: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}?subject=Consulting%20enquiry` },
   },
   {
     icon: MessageSquare,
-    title: 'Press',
-    body: 'Working on a story? Reach out and we’ll connect you with the right person.',
-    cta: { label: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}?subject=Press%20enquiry` },
+    title: 'General contact',
+    body: 'For partnerships, supplier messages, or anything that does not fit neatly into a project brief.',
+    cta: { label: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },
   },
 ];
 
@@ -43,11 +42,10 @@ const Contact = () => {
     const formEl = e.currentTarget;
     const data = Object.fromEntries(new FormData(formEl));
 
-    // Client-side validation — backend re-validates regardless.
     const name = String(data.name || '').trim();
     const email = String(data.email || '').trim();
     const message = String(data.message || '').trim();
-    if (!name)    { setError('Please enter your name'); return; }
+    if (!name) { setError('Please enter your name'); return; }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Please enter a valid email address'); return;
     }
@@ -55,10 +53,9 @@ const Contact = () => {
 
     setSubmitting(true);
     try {
-      // Public endpoint — no auth header. Use raw axios so we don't pull in
-      // the auth-bearing `api` instance for an anonymous form submission.
       await axios.post(`${API_ROOT}/contact`, {
-        name, email,
+        name,
+        email,
         company: String(data.company || '').trim(),
         message,
       });
@@ -77,19 +74,18 @@ const Contact = () => {
   return (
     <MarketingPage
       eyebrow="Contact"
-      title="We'd love to hear from you"
-      tagline="Sales, support, partnerships, press, or just a hello — pick the channel that fits, or send us a message below."
+      title="Start a project conversation"
+      tagline="Tell NeonNeuron what you are trying to build, improve, or automate. Email hello@neonneuron.online or send a short message below."
     >
-      <Section heading="Pick a channel">
+      <Section heading="How to reach us">
         <div className="grid sm:grid-cols-3 gap-4 not-prose">
-          {/* eslint-disable-next-line no-unused-vars -- Icon rendered as JSX below */}
           {CHANNELS.map(({ icon: Icon, title, body, cta }) => (
             <Card key={title}>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4">
-                <Icon size={18} />
+                {createElement(Icon, { size: 18 })}
               </div>
-              <h3 className="text-base font-semibold text-slate-900 mb-1">{title}</h3>
-              <p className="text-sm text-slate-600 leading-relaxed mb-4">{body}</p>
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">{title}</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">{body}</p>
               <a href={cta.href} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
                 {cta.label}
               </a>
@@ -98,16 +94,16 @@ const Contact = () => {
         </div>
       </Section>
 
-      <Section heading="Or send us a message">
+      <Section heading="Send us a message">
         <Card className="not-prose">
           {submitted ? (
             <div className="flex items-start gap-3">
               <CheckCircle2 size={22} className="text-emerald-500 mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold text-slate-900">Message sent successfully.</p>
-                <p className="text-sm text-slate-600 mt-1">
-                  Thanks — we've sent a confirmation to your inbox and our team will reply within
-                  one business day. You can also email us at <a href={`mailto:${SUPPORT_EMAIL}`} className="text-indigo-600 font-medium">{SUPPORT_EMAIL}</a>.
+                <p className="font-semibold text-slate-900 dark:text-white">Message sent successfully.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                  Thanks — we have sent a confirmation to your inbox and will reply as soon as we can.
+                  You can also email us at <a href={`mailto:${SUPPORT_EMAIL}`} className="text-indigo-600 font-medium">{SUPPORT_EMAIL}</a>.
                 </p>
               </div>
             </div>
@@ -119,14 +115,14 @@ const Contact = () => {
               </div>
               <Field name="company" label="Company (optional)" disabled={submitting} />
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Message</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">Message</label>
                 <textarea
                   name="message"
                   required
                   rows={5}
                   disabled={submitting}
-                  placeholder="Tell us what you're working on…"
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-colors resize-y disabled:opacity-60"
+                  placeholder="Tell us about your project, website, app, automation, or technical challenge..."
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-colors resize-y disabled:opacity-60"
                 />
               </div>
               {error && (
@@ -134,16 +130,16 @@ const Contact = () => {
                   <AlertCircle size={16} className="mt-0.5 shrink-0" /> <span>{error}</span>
                 </div>
               )}
-              <div className="flex items-center justify-between pt-2">
-                <p className="text-xs text-slate-500">
-                  Goes to <span className="font-medium text-slate-700">{SUPPORT_EMAIL}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Goes to <span className="font-medium text-slate-700 dark:text-slate-200">{SUPPORT_EMAIL}</span>
                 </p>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {submitting ? <><Loader2 size={14} className="animate-spin" /> Sending…</> : <>Send message <Send size={14} /></>}
+                  {submitting ? <><Loader2 size={14} className="animate-spin" /> Sending...</> : <>Send message <Send size={14} /></>}
                 </button>
               </div>
             </form>
@@ -156,13 +152,13 @@ const Contact = () => {
 
 const Field = ({ name, type = 'text', label, required, disabled }) => (
   <div>
-    <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">{label}</label>
     <input
       name={name}
       type={type}
       required={required}
       disabled={disabled}
-      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-colors disabled:opacity-60"
+      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-colors disabled:opacity-60"
     />
   </div>
 );

@@ -16,11 +16,11 @@
 import { Resend } from 'resend';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const FRONTEND_URL   = (process.env.FRONTEND_URL || 'https://www.leedsphere.com').replace(/\/+$/, '');
-const MAIL_FROM      = process.env.MAIL_FROM || 'Leedsphere <noreply@leedsphere.com>';
+const FRONTEND_URL   = (process.env.FRONTEND_URL || 'https://www.neonneuron.online').replace(/\/+$/, '');
+const MAIL_FROM      = process.env.MAIL_FROM || 'NeonNeuron <noreply@neonneuron.online>';
 // Single source of truth for the global support inbox. Override via env if
 // the operations team ever moves to a different alias.
-export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'admin@leedsphere.com';
+export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'hello@neonneuron.online';
 
 let _client = null;
 const client = () => {
@@ -46,14 +46,14 @@ const renderInviteHtml = ({ teamName, inviterName, role, inviteUrl, loginUrl, si
         <tr><td style="padding:32px 32px 8px 32px;">
           <div style="display:inline-flex;align-items:center;gap:8px;">
             <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;">L</div>
-            <span style="font-weight:700;font-size:18px;letter-spacing:-0.01em;">Leedsphere</span>
+            <span style="font-weight:700;font-size:18px;letter-spacing:-0.01em;">NeonNeuron</span>
           </div>
         </td></tr>
         <tr><td style="padding:8px 32px 0 32px;">
           <h1 style="margin:24px 0 8px;font-size:26px;line-height:1.2;letter-spacing:-0.02em;">You're invited</h1>
           <p style="margin:0 0 16px;color:#475569;line-height:1.6;font-size:15px;">
             ${safeName(inviterName) || 'Someone'} invited you to join
-            <strong>${safeName(teamName) || 'their team'}</strong>${role ? ` as <strong>${safeName(role)}</strong>` : ''} on Leedsphere.
+            <strong>${safeName(teamName) || 'their team'}</strong>${role ? ` as <strong>${safeName(role)}</strong>` : ''} on NeonNeuron.
           </p>
           <p style="margin:0 0 24px;color:#64748b;line-height:1.6;font-size:14px;">
             This link expires in 24 hours and can only be used once.
@@ -69,7 +69,7 @@ const renderInviteHtml = ({ teamName, inviterName, role, inviteUrl, loginUrl, si
             we'll connect this invite to your existing account.
           </p>
           <p style="margin:8px 0 0;color:#64748b;font-size:13px;line-height:1.5;">
-            New to Leedsphere? You can also
+            New to NeonNeuron? You can also
             <a href="${signupUrl}" style="color:#4f46e5;text-decoration:none;font-weight:600;">create an account</a>
             and use the same email to claim this invite.
           </p>
@@ -82,13 +82,13 @@ const renderInviteHtml = ({ teamName, inviterName, role, inviteUrl, loginUrl, si
           </p>
         </td></tr>
       </table>
-      <p style="margin:16px 0 0;color:#94a3b8;font-size:12px;">&copy; ${new Date().getFullYear()} Leedsphere</p>
+      <p style="margin:16px 0 0;color:#94a3b8;font-size:12px;">&copy; ${new Date().getFullYear()} NeonNeuron</p>
     </td></tr>
   </table>
 </body></html>`;
 
 const renderInviteText = ({ teamName, inviterName, role, inviteUrl, loginUrl, signupUrl }) => `
-You're invited to ${teamName || 'a team'} on Leedsphere
+You're invited to ${teamName || 'a team'} on NeonNeuron
 
 ${inviterName || 'Someone'} invited you to join${role ? ` as ${role}` : ''}.
 
@@ -98,10 +98,10 @@ ${inviteUrl}
 Already have an account? Sign in — we'll connect this invite automatically:
 ${loginUrl}
 
-New to Leedsphere? Create an account with the same email:
+New to NeonNeuron? Create an account with the same email:
 ${signupUrl}
 
-— Leedsphere
+— NeonNeuron
 `;
 
 /**
@@ -112,18 +112,17 @@ ${signupUrl}
 export const sendInviteEmail = async ({ to, token, teamName, inviterName, role }) => {
   // BASE_URL is the production frontend origin. FRONTEND_URL (env) is the
   // single source of truth; we alias to BASE_URL here to match the link spec.
-  const BASE_URL = FRONTEND_URL || 'https://www.leedsphere.com';
+  const BASE_URL = FRONTEND_URL || 'https://www.neonneuron.online';
   const inviteLink = `${BASE_URL}/accept-invite/${token}`;
   const inviteUrl  = inviteLink;
-  const loginUrl   = `${BASE_URL}/login`;
-  const signupUrl  = `${BASE_URL}/signup`;
+  const loginUrl   = `${BASE_URL}/contact`;
+  const signupUrl  = `${BASE_URL}/contact`;
   console.log('Invite link:', inviteLink);
-  console.log('Login link:', loginUrl);
-  console.log('Signup link:', signupUrl);
+  console.log('Contact link:', loginUrl);
 
   const html = renderInviteHtml({ teamName, inviterName, role, inviteUrl, loginUrl, signupUrl });
   const text = renderInviteText({ teamName, inviterName, role, inviteUrl, loginUrl, signupUrl });
-  const subject = `${inviterName || 'Someone'} invited you to ${teamName || 'a team'} on Leedsphere`;
+  const subject = `${inviterName || 'Someone'} invited you to ${teamName || 'a project team'} on NeonNeuron`;
 
   const c = client();
   if (!c) {
@@ -150,7 +149,7 @@ export const sendInviteEmail = async ({ to, token, teamName, inviterName, role }
 /* ============================================================
  * Contact form
  *   sendContactEmails({ name, email, company, message })
- *     1. Notification → admin@leedsphere.com (reply-to set to user)
+ *     1. Notification → hello@neonneuron.online (reply-to set to user)
  *     2. Auto-reply   → user with confirmation copy
  *
  *   Returns { admin, user } — each is the Resend response or null.
@@ -170,7 +169,7 @@ const renderContactNotificationHtml = ({ name, email, company, message, sentAt }
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;box-shadow:0 6px 20px rgba(15,23,42,0.06);overflow:hidden;">
       <tr><td style="padding:24px 28px;border-bottom:1px solid #e2e8f0;">
-        <div style="font-size:13px;color:#64748b;letter-spacing:0.04em;text-transform:uppercase;font-weight:600;">Leedsphere — New contact message</div>
+        <div style="font-size:13px;color:#64748b;letter-spacing:0.04em;text-transform:uppercase;font-weight:600;">NeonNeuron — New contact message</div>
       </td></tr>
       <tr><td style="padding:24px 28px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -190,7 +189,7 @@ const renderContactNotificationHtml = ({ name, email, company, message, sentAt }
 </body></html>`;
 
 const renderContactNotificationText = ({ name, email, company, message, sentAt }) => `
-New Contact Message — Leedsphere
+New Contact Message — NeonNeuron
 
 Name: ${name}
 Email: ${email}
@@ -210,13 +209,13 @@ const renderContactAutoReplyHtml = ({ name, message }) => `
       <tr><td style="padding:32px 32px 8px;">
         <div style="display:inline-flex;align-items:center;gap:8px;">
           <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;">L</div>
-          <span style="font-weight:700;font-size:18px;letter-spacing:-0.01em;">Leedsphere</span>
+          <span style="font-weight:700;font-size:18px;letter-spacing:-0.01em;">NeonNeuron</span>
         </div>
       </td></tr>
       <tr><td style="padding:8px 32px 0;">
         <h1 style="margin:18px 0 8px;font-size:24px;line-height:1.2;letter-spacing:-0.02em;">We received your message</h1>
         <p style="margin:0 0 16px;color:#475569;line-height:1.6;font-size:15px;">
-          Hi ${escapeHtml(name) || 'there'}, thank you for contacting Leedsphere. Our team will get back to you shortly.
+          Hi ${escapeHtml(name) || 'there'}, thank you for contacting NeonNeuron. Our team will get back to you shortly.
         </p>
         <div style="margin:8px 0 4px;color:#64748b;font-size:13px;font-weight:600;">Your message</div>
         <div style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-size:14px;line-height:1.6;color:#0f172a;">${escapeHtml(message)}</div>
@@ -227,7 +226,7 @@ const renderContactAutoReplyHtml = ({ name, message }) => `
         </p>
       </td></tr>
     </table>
-    <p style="margin:16px 0 0;color:#94a3b8;font-size:12px;">&copy; ${new Date().getFullYear()} Leedsphere</p>
+    <p style="margin:16px 0 0;color:#94a3b8;font-size:12px;">&copy; ${new Date().getFullYear()} NeonNeuron</p>
   </td></tr>
 </table>
 </body></html>`;
@@ -235,14 +234,14 @@ const renderContactAutoReplyHtml = ({ name, message }) => `
 const renderContactAutoReplyText = ({ name, message }) => `
 Hi ${name || 'there'},
 
-Thank you for contacting Leedsphere.
+Thank you for contacting NeonNeuron.
 We have received your message and our team will get back to you shortly.
 
 Your Message:
 "${message}"
 
 Regards,
-Leedsphere Team
+NeonNeuron Team
 `;
 
 export const sendContactEmails = async ({ name, email, company, message }) => {
@@ -282,7 +281,7 @@ export const sendContactEmails = async ({ name, email, company, message }) => {
       from: MAIL_FROM,
       to: [email],
       reply_to: SUPPORT_EMAIL,
-      subject: 'We received your message - Leedsphere',
+      subject: 'We received your message - NeonNeuron',
       html: renderContactAutoReplyHtml({ name, message }),
       text: renderContactAutoReplyText({ name, message }),
     });

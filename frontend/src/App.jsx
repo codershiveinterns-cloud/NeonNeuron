@@ -16,8 +16,6 @@ import TeamSelect from './pages/TeamSelect';
 import RequireTeam from './components/auth/RequireTeam';
 
 // Firebase auth — the only auth system in this app.
-import FirebaseSignup from './pages/auth/SignupFirebase';
-import FirebaseLogin from './pages/auth/LoginFirebase';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import AcceptInvite from './pages/auth/AcceptInvite';
@@ -32,7 +30,9 @@ import Contact from './pages/marketing/Contact';
 import Privacy from './pages/marketing/Privacy';
 import Terms from './pages/marketing/Terms';
 import Cookies from './pages/marketing/Cookies';
-import ContentPage from './pages/marketing/ContentPage';
+import Services from './pages/marketing/Services';
+import Portfolio from './pages/marketing/Portfolio';
+import CaseStudies from './pages/marketing/CaseStudies';
 
 function App() {
   return (
@@ -43,50 +43,40 @@ function App() {
           <Route path="/" element={<Home />} />
 
           {/* Marketing / legal pages */}
-          <Route path="/about"    element={<About />} />
-          <Route path="/contact"  element={<Contact />} />
-          <Route path="/privacy"  element={<Privacy />} />
-          <Route path="/terms"    element={<Terms />} />
-          <Route path="/cookies"  element={<Cookies />} />
+          <Route path="/about"        element={<About />} />
+          <Route path="/contact"      element={<Contact />} />
+          <Route path="/privacy"      element={<Privacy />} />
+          <Route path="/terms"        element={<Terms />} />
+          <Route path="/cookies"      element={<Cookies />} />
+          <Route path="/services"     element={<Services />} />
+          <Route path="/portfolio"    element={<Portfolio />} />
+          <Route path="/case-studies" element={<CaseStudies />} />
 
-          {/* Product pages — driven by the content registry */}
-          <Route path="/overview"     element={<ContentPage slug="overview" />} />
-          <Route path="/channels"     element={<ContentPage slug="channels" />} />
-          <Route path="/messaging"    element={<ContentPage slug="messaging" />} />
-          <Route path="/file-sharing" element={<ContentPage slug="file-sharing" />} />
-          <Route path="/search"       element={<ContentPage slug="search" />} />
-          <Route path="/security"     element={<ContentPage slug="security" />} />
-          <Route path="/roadmap"      element={<ContentPage slug="roadmap" />} />
-          <Route path="/changelog"    element={<ContentPage slug="changelog" />} />
+          {/* Legacy marketing URLs now point visitors to the services site. */}
+          <Route path="/overview"     element={<Navigate to="/services" replace />} />
+          <Route path="/channels"     element={<Navigate to="/services" replace />} />
+          <Route path="/messaging"    element={<Navigate to="/services" replace />} />
+          <Route path="/file-sharing" element={<Navigate to="/services" replace />} />
+          <Route path="/search"       element={<Navigate to="/services" replace />} />
+          <Route path="/security"     element={<Navigate to="/services" replace />} />
+          <Route path="/roadmap"      element={<Navigate to="/services" replace />} />
+          <Route path="/changelog"    element={<Navigate to="/services" replace />} />
+          <Route path="/use-cases/*"  element={<Navigate to="/services" replace />} />
+          <Route path="/help"         element={<Navigate to="/contact" replace />} />
+          <Route path="/getting-started" element={<Navigate to="/contact" replace />} />
+          <Route path="/docs"         element={<Navigate to="/services" replace />} />
+          <Route path="/guides"       element={<Navigate to="/services" replace />} />
+          <Route path="/tutorials"    element={<Navigate to="/services" replace />} />
+          <Route path="/blog"         element={<Navigate to="/services" replace />} />
+          <Route path="/community"    element={<Navigate to="/contact" replace />} />
+          <Route path="/careers"      element={<Navigate to="/contact" replace />} />
+          <Route path="/press"        element={<Navigate to="/contact" replace />} />
+          <Route path="/partners"     element={<Navigate to="/contact" replace />} />
 
-          {/* Use cases (Teams column) */}
-          <Route path="/use-cases/product"     element={<ContentPage slug="use-cases-product" />} />
-          <Route path="/use-cases/engineering" element={<ContentPage slug="use-cases-engineering" />} />
-          <Route path="/use-cases/design"      element={<ContentPage slug="use-cases-design" />} />
-          <Route path="/use-cases/marketing"   element={<ContentPage slug="use-cases-marketing" />} />
-          <Route path="/use-cases/support"     element={<ContentPage slug="use-cases-support" />} />
-          <Route path="/use-cases/remote"      element={<ContentPage slug="use-cases-remote" />} />
-          <Route path="/use-cases/startups"    element={<ContentPage slug="use-cases-startups" />} />
-          <Route path="/use-cases/enterprises" element={<ContentPage slug="use-cases-enterprises" />} />
-
-          {/* Resources */}
-          <Route path="/help"            element={<ContentPage slug="help" />} />
-          <Route path="/getting-started" element={<ContentPage slug="getting-started" />} />
-          <Route path="/docs"            element={<ContentPage slug="docs" />} />
-          <Route path="/guides"          element={<ContentPage slug="guides" />} />
-          <Route path="/tutorials"       element={<ContentPage slug="tutorials" />} />
-          <Route path="/blog"            element={<ContentPage slug="blog" />} />
-          <Route path="/community"       element={<ContentPage slug="community" />} />
-
-          {/* Company extras */}
-          <Route path="/careers"  element={<ContentPage slug="careers" />} />
-          <Route path="/press"    element={<ContentPage slug="press" />} />
-          <Route path="/partners" element={<ContentPage slug="partners" />} />
-
-          {/* Public auth pages */}
-          <Route path="/login" element={<FirebaseLogin />} />
-          <Route path="/signup" element={<FirebaseSignup />} />
-          <Route path="/register" element={<Navigate to="/signup" replace />} />
+          {/* Public auth entry points now route enquiries to the contact page. */}
+          <Route path="/login" element={<Navigate to="/contact" replace />} />
+          <Route path="/signup" element={<Navigate to="/contact" replace />} />
+          <Route path="/register" element={<Navigate to="/contact" replace />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           {/* Magic-link invite landing — public, validated against the token */}

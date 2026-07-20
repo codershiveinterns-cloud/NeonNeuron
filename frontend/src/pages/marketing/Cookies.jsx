@@ -1,24 +1,24 @@
 import MarketingPage, { Section } from '../../components/marketing/MarketingPage';
 
-const LAST_UPDATED = 'April 27, 2026';
+const LAST_UPDATED = 'July 20, 2026';
 
 const COOKIE_TABLE = [
   {
     name: 'Strictly necessary',
-    examples: 'Session token, CSRF token, load-balancer routing',
-    purpose: 'Required to authenticate you and keep the Service secure. Cannot be disabled.',
+    examples: 'Security tokens, CSRF protection, load-balancer routing',
+    purpose: 'Required to keep the website secure and reliable. Cannot be disabled.',
     duration: 'Session or up to 1 year',
   },
   {
     name: 'Preferences',
-    examples: 'Theme (light/dark), active workspace, last-used team',
-    purpose: 'Remembers UI choices so you don&apos;t reconfigure on every visit.',
+    examples: 'Theme (light/dark), accessibility or display preferences',
+    purpose: 'Remembers website choices so you don&apos;t reconfigure them on every visit.',
     duration: 'Up to 1 year',
   },
   {
     name: 'Analytics',
     examples: 'Anonymized page-view counters, feature-usage metrics',
-    purpose: 'Helps us understand which parts of the product are used so we can improve them.',
+    purpose: 'Helps us understand which pages are used so we can improve the website.',
     duration: 'Up to 13 months',
   },
 ];
@@ -73,9 +73,9 @@ const Cookies = () => (
         including:
       </p>
       <ul className="list-disc pl-6 space-y-2">
-        <li><strong>Firebase Authentication</strong> — for sign-in session handling.</li>
+        <li><strong>Hosting and security providers</strong> — for delivering the website and protecting it from misuse.</li>
         <li><strong>Plausible / similar privacy-friendly analytics</strong> — for aggregated usage
-          metrics. No personal data is sent to third parties for advertising.</li>
+          metrics if analytics are enabled. No personal data is sent to third parties for advertising.</li>
       </ul>
       <p>
         We do not use advertising or cross-site tracking cookies, and we do not sell data to
@@ -87,26 +87,25 @@ const Cookies = () => (
       <p>
         You can control cookies through your browser settings — most browsers let you block all
         cookies, accept only first-party cookies, or delete existing ones. Note that blocking
-        strictly-necessary cookies will prevent you from signing in.
+        strictly-necessary cookies may prevent parts of the website from working correctly.
       </p>
       <p>
         If you&apos;re in a region that requires consent for non-essential cookies (e.g. the EU/UK
-        under GDPR), you&apos;ll see a banner the first time you visit NeonNeuron offering an
-        Accept / Reject choice. You can revisit your choice anytime from the cookie banner&apos;s
-        "Manage preferences" link.
+        under GDPR), the website should offer an appropriate Accept / Reject choice before
+        non-essential cookies are used. You can also manage cookies through your browser settings.
       </p>
     </Section>
 
     <Section heading="Updates">
       <p>
-        We&apos;ll update this page if our cookie practices change. Material changes are
-        communicated through the same banner.
+        We&apos;ll update this page if our cookie practices change. The latest version will be posted
+        here with a revised last updated date.
       </p>
     </Section>
 
     <Section heading="Questions">
       <p>
-        Email <a href="mailto:privacy@neonneuron.app">privacy@neonneuron.app</a> or use our
+        Email <a href="mailto:hello@neonneuron.online">hello@neonneuron.online</a> or use our
         <a href="/contact"> contact form</a>. Our full <a href="/privacy">Privacy Policy</a> covers
         what we do with the data these cookies collect.
       </p>
