@@ -31,6 +31,7 @@ import Privacy from './pages/marketing/Privacy';
 import Terms from './pages/marketing/Terms';
 import Cookies from './pages/marketing/Cookies';
 import Services from './pages/marketing/Services';
+import Pricing from './pages/marketing/Pricing';
 import Portfolio from './pages/marketing/Portfolio';
 import CaseStudies from './pages/marketing/CaseStudies';
 
@@ -49,6 +50,7 @@ function App() {
           <Route path="/terms"        element={<Terms />} />
           <Route path="/cookies"      element={<Cookies />} />
           <Route path="/services"     element={<Services />} />
+          <Route path="/pricing"      element={<Pricing />} />
           <Route path="/portfolio"    element={<Portfolio />} />
           <Route path="/case-studies" element={<CaseStudies />} />
 

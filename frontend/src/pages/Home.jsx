@@ -120,8 +120,8 @@ const Hero = () => (
           <PrimaryButton to="/contact" size="lg">
             Start a Project <ArrowRight size={16} />
           </PrimaryButton>
-          <SecondaryButton to="/services" size="lg">
-            View Services
+          <SecondaryButton to="/pricing" size="lg">
+            View Pricing
           </SecondaryButton>
         </div>
 

@@ -7,6 +7,7 @@ import BrandLogo from '../common/BrandLogo';
 const NAV_LINKS = [
   { label: 'Home', to: '/', end: true },
   { label: 'Services', to: '/services' },
+  { label: 'Pricing', to: '/pricing' },
   { label: 'Portfolio', to: '/portfolio' },
   { label: 'Case Studies', to: '/case-studies' },
   { label: 'About', to: '/about' },

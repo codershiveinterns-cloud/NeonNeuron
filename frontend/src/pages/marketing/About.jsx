@@ -2,6 +2,9 @@ import { createElement } from 'react';
 import MarketingPage, { Section, Card } from '../../components/marketing/MarketingPage';
 import { Handshake, Lightbulb, ShieldCheck, Sparkles } from 'lucide-react';
 
+const CONTACT_PHONE = '+447898132784';
+const CONTACT_PHONE_DISPLAY = '+44 7898 132784';
+
 const VALUES = [
   {
     icon: Lightbulb,
@@ -44,6 +47,37 @@ const About = () => (
       </p>
     </Section>
 
+    <Section heading="Founder">
+      <Card className="not-prose">
+        <div className="grid md:grid-cols-[220px_1fr] gap-6 items-center">
+          <div className="text-center md:text-left">
+            <div className="mx-auto md:mx-0 w-28 h-28 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center text-5xl font-bold shadow-xl shadow-indigo-500/20">
+              G
+            </div>
+            <h3 className="mt-5 text-2xl font-bold text-slate-900 dark:text-white">Garima</h3>
+            <p className="mt-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+              Founder, NeonNeuron Technologies Ltd
+            </p>
+          </div>
+          <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p>
+              Garima founded NeonNeuron to help businesses turn digital ideas and operational
+              problems into clear, usable technology. Her approach is practical and client-focused:
+              understand the goal first, shape the right scope, then build systems that are easy to
+              use, maintain, and improve.
+            </p>
+            <p>
+              She works across discovery, planning, design direction, delivery, and handover, making
+              sure each project stays connected to the business outcome rather than technology for
+              its own sake. NeonNeuron reflects that approach: modern websites, web applications,
+              automation, and AI-enabled tools built with clarity, care, and long-term usefulness in
+              mind.
+            </p>
+          </div>
+        </div>
+      </Card>
+    </Section>
+
     <Section heading="What we believe">
       <div className="grid sm:grid-cols-2 gap-4 not-prose">
         {VALUES.map(({ icon: Icon, title, body }) => (
@@ -68,7 +102,8 @@ const About = () => (
     <Section heading="Get in touch">
       <p>
         If you have a project, system, or workflow you want to improve, email
-        <a href="mailto:hello@neonneuron.online"> hello@neonneuron.online</a> or use our
+        <a href="mailto:hello@neonneuron.online"> hello@neonneuron.online</a>, call
+        <a href={`tel:${CONTACT_PHONE}`}> {CONTACT_PHONE_DISPLAY}</a>, or use our
         <a href="/contact"> contact page</a>.
       </p>
     </Section>

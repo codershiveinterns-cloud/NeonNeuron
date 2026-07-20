@@ -1,6 +1,6 @@
 import { createElement, useState } from 'react';
 import MarketingPage, { Section, Card } from '../../components/marketing/MarketingPage';
-import { AlertCircle, CheckCircle2, Loader2, Mail, MessageSquare, Send, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Mail, MessageSquare, Phone, Send, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { API_ROOT } from '../../config/api';
@@ -8,6 +8,8 @@ import { API_ROOT } from '../../config/api';
 // Single source of truth for the public enquiries inbox. Mirrors backend
 // SUPPORT_EMAIL (services/email.js).
 export const SUPPORT_EMAIL = 'hello@neonneuron.online';
+export const SUPPORT_PHONE = '+447898132784';
+export const SUPPORT_PHONE_DISPLAY = '+44 7898 132784';
 
 const CHANNELS = [
   {
@@ -21,6 +23,12 @@ const CHANNELS = [
     title: 'Consulting',
     body: 'Need technical direction, delivery planning, or a second opinion on a digital system?',
     cta: { label: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}?subject=Consulting%20enquiry` },
+  },
+  {
+    icon: Phone,
+    title: 'Call us',
+    body: 'Prefer to talk through your project first? Call NeonNeuron to discuss what you want to build or improve.',
+    cta: { label: SUPPORT_PHONE_DISPLAY, href: `tel:${SUPPORT_PHONE}` },
   },
   {
     icon: MessageSquare,
@@ -75,10 +83,10 @@ const Contact = () => {
     <MarketingPage
       eyebrow="Contact"
       title="Start a project conversation"
-      tagline="Tell NeonNeuron what you are trying to build, improve, or automate. Email hello@neonneuron.online or send a short message below."
+      tagline="Tell NeonNeuron what you are trying to build, improve, or automate. Email hello@neonneuron.online, call +44 7898 132784, or send a short message below."
     >
       <Section heading="How to reach us">
-        <div className="grid sm:grid-cols-3 gap-4 not-prose">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 not-prose">
           {CHANNELS.map(({ icon: Icon, title, body, cta }) => (
             <Card key={title}>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4">
@@ -103,7 +111,7 @@ const Contact = () => {
                 <p className="font-semibold text-slate-900 dark:text-white">Message sent successfully.</p>
                 <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
                   Thanks — we have sent a confirmation to your inbox and will reply as soon as we can.
-                  You can also email us at <a href={`mailto:${SUPPORT_EMAIL}`} className="text-indigo-600 font-medium">{SUPPORT_EMAIL}</a>.
+                  You can also email us at <a href={`mailto:${SUPPORT_EMAIL}`} className="text-indigo-600 font-medium">{SUPPORT_EMAIL}</a> or call <a href={`tel:${SUPPORT_PHONE}`} className="text-indigo-600 font-medium">{SUPPORT_PHONE_DISPLAY}</a>.
                 </p>
               </div>
             </div>

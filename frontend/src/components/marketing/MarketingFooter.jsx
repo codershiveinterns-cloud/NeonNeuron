@@ -3,6 +3,9 @@ import { ArrowUp } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
 
 const LEGAL_IDENTITY = 'NeonNeuron Technologies Ltd · Registered in England and Wales, Company No. 17074447 · Registered office: 82a James Carter Road, Mildenhall, IP28 7DE, United Kingdom';
+const CONTACT_EMAIL = 'hello@neonneuron.online';
+const CONTACT_PHONE = '+447898132784';
+const CONTACT_PHONE_DISPLAY = '+44 7898 132784';
 
 const FOOTER_COLS = [
   {
@@ -11,6 +14,7 @@ const FOOTER_COLS = [
       { label: 'Web Design & Development', to: '/services' },
       { label: 'Custom Web Applications', to: '/services' },
       { label: 'Automation & Internal Tools', to: '/services' },
+      { label: 'Pricing', to: '/pricing' },
       { label: 'Maintenance & Support', to: '/services' },
     ],
   },
@@ -67,6 +71,14 @@ const MarketingFooter = () => {
               UK-based technology services for businesses that need dependable websites, web apps,
               automation, and digital systems built with care.
             </p>
+            <div className="mt-4 flex flex-col gap-1 text-sm">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#6b7280] dark:text-[#9ca3af] hover:text-[#111827] dark:hover:text-white transition-colors">
+                {CONTACT_EMAIL}
+              </a>
+              <a href={`tel:${CONTACT_PHONE}`} className="text-[#6b7280] dark:text-[#9ca3af] hover:text-[#111827] dark:hover:text-white transition-colors">
+                {CONTACT_PHONE_DISPLAY}
+              </a>
+            </div>
           </div>
 
           {FOOTER_COLS.map((col) => (

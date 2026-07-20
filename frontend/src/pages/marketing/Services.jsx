@@ -48,6 +48,9 @@ const PROCESS = [
   'Launch carefully, hand over clearly, and support improvements after release.',
 ];
 
+const CONTACT_PHONE = '+447898132784';
+const CONTACT_PHONE_DISPLAY = '+44 7898 132784';
+
 const Services = () => (
   <MarketingPage
     eyebrow="Services"
@@ -93,7 +96,8 @@ const Services = () => (
         working yet, we can help turn that into a practical plan.
       </p>
       <p>
-        Email <a href="mailto:hello@neonneuron.online">hello@neonneuron.online</a> or use the
+        Email <a href="mailto:hello@neonneuron.online">hello@neonneuron.online</a>, call
+        <a href={`tel:${CONTACT_PHONE}`}> {CONTACT_PHONE_DISPLAY}</a>, or use the
         <a href="/contact"> contact page</a> to start a project enquiry.
       </p>
       <a href="/contact" className="not-prose inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition-all">
