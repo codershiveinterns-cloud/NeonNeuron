@@ -1,0 +1,351 @@
+import Message from '../models/Message.js';
+import DirectMessage from '../models/DirectMessage.js';
+import Conversation from '../models/Conversation.js';
+import Channel from '../models/Channel.js';
+import Team from '../models/Team.js';
+import User from '../models/User.js';
+import { registerCallHandlers } from './callHandler.js';
+import { verifyFirebaseTokenAndGetUser } from '../services/firebaseUser.js';
+import { sendNotification, sendNotificationsToMany } from '../services/notificationService.js';
+
+/**
+ * Resolve the recipient list for a channel notification: every team member
+ * who can see the channel, minus the sender. Private channels narrow the
+ * list to channel.members.
+ */
+const recipientsForChannel = async (channelId, excludeUserId) => {
+  const channel = await Channel.findById(channelId).select('teamId isPrivate type members');
+  if (!channel) return [];
+  const team = await Team.findById(channel.teamId).select('members');
+  if (!team) return [];
+  const teamMemberIds = (team.members || []).map((m) => String(m.userId));
+  const isPrivate = channel.isPrivate || channel.type === 'private';
+  const allowed = isPrivate
+    ? teamMemberIds.filter((id) => (channel.members || []).some((m) => String(m) === id))
+    : teamMemberIds;
+  return allowed.filter((id) => id !== String(excludeUserId));
+};
+
+/**
+ * Find @-mention targets in a message body. Matches @username and resolves
+ * by the leading part of email or User.name (case-insensitive). Returns
+ * the recipient ids in the same order as the @ tokens, deduplicated.
+ */
+const resolveMentionedUserIds = async (content, candidateRecipientIds) => {
+  if (!content) return [];
+  const tokens = [...content.matchAll(/@([\w.-]+)/g)].map((m) => m[1].toLowerCase());
+  if (!tokens.length) return [];
+  const candidates = await User.find({ _id: { $in: candidateRecipientIds } })
+    .select('_id name email')
+    .lean();
+  const matchedIds = new Set();
+  for (const t of tokens) {
+    for (const u of candidates) {
+      const nameSlug = (u.name || '').toLowerCase().replace(/\s+/g, '');
+      const emailHandle = (u.email || '').split('@')[0].toLowerCase();
+      if (nameSlug === t || emailHandle === t) matchedIds.add(String(u._id));
+    }
+  }
+  return [...matchedIds];
+};
+
+export const handleSockets = (io) => {
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+      if (token) {
+        const { user } = await verifyFirebaseTokenAndGetUser(token);
+        if (user) socket.user = user;
+      }
+    } catch (err) { /* continue without auth */ }
+    next();
+  });
+
+  io.on('connection', (socket) => {
+    // Snapshot at connection time. Most handlers use these directly; the
+    // lazy `callerInfo()` below recovers from a missed handshake auth.
+    let userName = socket.user?.name || 'Anonymous';
+    let userId = socket.user?._id;
+
+    /**
+     * Lazy identity resolver. Reading `socket.user` directly on every event
+     * (instead of relying on the connection-time snapshot) means a token
+     * that arrived late, was rotated, or failed initial verification can
+     * still be picked up by re-verifying the Firebase token from handshake auth.
+     *
+     * Closure capture was the root cause of "Anonymous" senders and
+     * "Not authenticated" call errors persisting across an entire
+     * connection even after the user was clearly signed in.
+     */
+    const callerInfo = async () => {
+      if (!socket.user) {
+        const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+        if (token) {
+          try {
+            const { user: u } = await verifyFirebaseTokenAndGetUser(token);
+            if (u) {
+              socket.user = u;
+              // Refresh the connection-scope vars so handlers that
+              // captured them (edit/delete/reaction) see the right values too.
+              userId = u._id;
+              userName = u.name || 'Anonymous';
+              socket.join(`user_${u._id}`);
+            }
+          } catch (err) {
+            console.warn('[socket] re-auth failed:', err.message);
+          }
+        }
+      }
+      return {
+        userId: socket.user?._id || null,
+        userName: socket.user?.name || 'Anonymous',
+      };
+    };
+
+    // Auto-join user's personal room for DM notifications
+    if (userId) socket.join(`user_${userId}`);
+
+    // ===== WebRTC call signaling =====
+    registerCallHandlers(io, socket);
+
+    // ===== Channel Rooms =====
+    socket.on('join_channel', (channelId) => {
+      socket.join(channelId);
+    });
+
+    socket.on('leave_channel', (channelId) => {
+      socket.leave(channelId);
+    });
+
+    // ===== Send Message (channel + thread) =====
+    socket.on('send_message', async (data) => {
+      try {
+        const { channelId, content, threadId } = data;
+        if (!channelId || !content) return;
+
+        // Resolve identity at emit time so a late/rotated token still
+        // attributes the message to the right user.
+        const { userId, userName } = await callerInfo();
+
+        // HARD REJECT unauthenticated emits. Previously we fell back to
+        // senderName='Anonymous' which polluted chat history with messages
+        // that couldn't be edited / deleted by the actual sender. Better to
+        // refuse the write and surface an auth_error to the client.
+        if (!userId) {
+          socket.emit('auth_error', { event: 'send_message', message: 'Not authenticated; please reconnect.' });
+          return;
+        }
+
+        const newMessage = await Message.create({
+          channelId,
+          conversationId: channelId,
+          senderId: userId,
+          senderName: userName, // real name, not "Anonymous"
+          content,
+          threadId: threadId || null,
+        });
+
+        // Increment parent reply count
+        if (threadId) {
+          const parent = await Message.findByIdAndUpdate(threadId, { $inc: { replyCount: 1 } }, { new: true });
+          // Broadcast updated parent to channel
+          if (parent) {
+            const populatedParent = await Message.findById(parent._id).populate('senderId', 'name avatar profileImage').populate('reactions.userId', 'name');
+            io.to(channelId).emit('message_updated', populatedParent);
+          }
+        }
+
+        const populated = await Message.findById(newMessage._id).populate('senderId', 'name avatar profileImage');
+
+        io.to(channelId).emit('receive_message', populated);
+
+        if (threadId) {
+          io.to(channelId).emit('thread_reply', { threadId, message: populated });
+        }
+
+        // -------- Notifications --------
+        // Channel members (minus sender) get a `message` notification; if
+        // they're @mentioned, they get a `mention` notification *instead*
+        // (mentions are louder than plain messages, so de-dupe).
+        try {
+          const allRecipients = await recipientsForChannel(channelId, userId);
+          const mentionedIds  = await resolveMentionedUserIds(content, allRecipients);
+          const mentionedSet  = new Set(mentionedIds.map(String));
+          const messageRecipients = allRecipients.filter((id) => !mentionedSet.has(String(id)));
+
+          const channelDoc = await Channel.findById(channelId).select('name');
+          const channelName = channelDoc?.name || 'channel';
+          const fromName    = userName || 'Someone';
+
+          // Mentions — always notify, even if viewing the channel.
+          if (mentionedIds.length) {
+            await sendNotificationsToMany(io, mentionedIds, {
+              type: 'mention',
+              content: `${fromName} mentioned you in #${channelName}`,
+              channelId,
+              entityId: newMessage._id,
+              redirectUrl: threadId
+                ? `/dashboard/channel/${channelId}?thread=${threadId}&message=${newMessage._id}`
+                : `/dashboard/channel/${channelId}?message=${newMessage._id}`,
+              meta: { channelName, fromUserId: String(userId), fromName, threadId: threadId || null, preview: String(content).slice(0, 120) },
+            });
+          }
+          // Plain message OR thread reply — frontend suppresses the toast if
+          // the user is currently viewing this channel; the bell entry is
+          // still recorded for history.
+          if (messageRecipients.length) {
+            const isReply = Boolean(threadId);
+            await sendNotificationsToMany(io, messageRecipients, {
+              type: isReply ? 'reply' : 'message',
+              content: isReply
+                ? `${fromName} replied in a thread in #${channelName}`
+                : `New message from ${fromName} in #${channelName}`,
+              channelId,
+              entityId: newMessage._id,
+              redirectUrl: isReply
+                ? `/dashboard/channel/${channelId}?thread=${threadId}&message=${newMessage._id}`
+                : `/dashboard/channel/${channelId}?message=${newMessage._id}`,
+              meta: { channelName, fromUserId: String(userId), fromName, threadId: threadId || null, preview: String(content).slice(0, 120) },
+            });
+          }
+        } catch (notifyErr) {
+          console.warn('[notify] message fan-out failed:', notifyErr.message);
+        }
+      } catch (error) {
+        console.error('send_message error:', error.message);
+      }
+    });
+
+    // ===== Edit Message =====
+    socket.on('edit_message', async (data) => {
+      try {
+        const { messageId, content } = data;
+        if (!messageId || !content || !content.trim()) return;
+
+        // Re-resolve at emit time so a late-arrived token is honored.
+        const { userId: callerId } = await callerInfo();
+        if (!callerId) {
+          socket.emit('auth_error', { event: 'edit_message', message: 'Not authenticated.' });
+          return;
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message) return;
+        if (!message.senderId || message.senderId.toString() !== callerId.toString()) {
+          socket.emit('edit_denied', { messageId, reason: 'You can only edit your own messages' });
+          return;
+        }
+
+        message.content = content;
+        message.isEdited = true;
+        message.editedAt = new Date();
+        message.edited = true; // legacy alias
+        await message.save();
+
+        const populated = await Message.findById(messageId).populate('senderId', 'name avatar profileImage').populate('reactions.userId', 'name');
+        const channelId = message.channelId.toString();
+        io.to(channelId).emit('message_updated', populated);
+      } catch (error) {
+        console.error('edit_message error:', error.message);
+      }
+    });
+
+    // ===== Delete Message =====
+    socket.on('delete_message', async (data) => {
+      try {
+        const { messageId } = data;
+        const message = await Message.findById(messageId);
+        if (!message || (userId && message.senderId?.toString() !== userId.toString())) return;
+
+        const channelId = message.channelId.toString();
+        const threadId = message.threadId;
+
+        await Message.findByIdAndDelete(messageId);
+        await Message.deleteMany({ threadId: messageId });
+
+        if (threadId) {
+          await Message.findByIdAndUpdate(threadId, { $inc: { replyCount: -1 } });
+        }
+
+        io.to(channelId).emit('message_deleted', { messageId, channelId });
+      } catch (error) {
+        console.error('delete_message error:', error.message);
+      }
+    });
+
+    // ===== Toggle Reaction =====
+    socket.on('toggle_reaction', async (data) => {
+      try {
+        const { messageId, emoji } = data;
+        if (!userId || !emoji) return;
+
+        const message = await Message.findById(messageId);
+        if (!message) return;
+
+        const existingIndex = message.reactions.findIndex(
+          r => r.userId.toString() === userId.toString() && r.emoji === emoji
+        );
+
+        if (existingIndex >= 0) {
+          message.reactions.splice(existingIndex, 1);
+        } else {
+          message.reactions.push({ userId, emoji });
+        }
+        await message.save();
+
+        const populated = await Message.findById(messageId).populate('senderId', 'name avatar profileImage').populate('reactions.userId', 'name');
+        const channelId = message.channelId.toString();
+        io.to(channelId).emit('message_updated', populated);
+      } catch (error) {
+        console.error('toggle_reaction error:', error.message);
+      }
+    });
+
+    // ===== DM Rooms =====
+    socket.on('join_conversation', (conversationId) => {
+      socket.join(`dm_${conversationId}`);
+    });
+
+    // ===== Send DM (persisted) =====
+    socket.on('send_dm', async (data) => {
+      try {
+        const { conversationId, text } = data;
+        if (!conversationId || !text || !userId) return;
+
+        const dm = await DirectMessage.create({
+          conversationId,
+          senderId: userId,
+          text,
+        });
+
+        await Conversation.findByIdAndUpdate(conversationId, {
+          lastMessage: text,
+          lastMessageAt: new Date(),
+        });
+
+        const populated = await DirectMessage.findById(dm._id).populate('senderId', 'name avatar profileImage');
+        io.to(`dm_${conversationId}`).emit('receive_dm', populated);
+      } catch (error) {
+        console.error('send_dm error:', error.message);
+      }
+    });
+
+    // ===== Typing Indicators =====
+    socket.on('user_typing', ({ channelId }) => {
+      socket.to(channelId).emit('user_typing', { senderName: userName });
+    });
+
+    socket.on('user_stop_typing', ({ channelId }) => {
+      socket.to(channelId).emit('user_stop_typing', { senderName: userName });
+    });
+
+    // ===== Presence =====
+    socket.on('go_online', () => {
+      if (userId) socket.broadcast.emit('user_online', { userId, name: userName });
+    });
+
+    socket.on('disconnect', () => {
+      if (userId) socket.broadcast.emit('user_offline', { userId });
+    });
+  });
+};
